@@ -241,9 +241,12 @@ Q2. What was your best performing model?
 
 Your code:
 ```{r,echo=TRUE}
+Myfit <- glm(SURVIVED_bin ~ AGE_TRUNK + FEMALE + ASTHMA + DIABETES + RENAL_CHRONIC + PATIENT_TYPE + OBESITY, family=binomial(link = "logit"), data = Train_COVID)
+summary(Myfit)
 #
 #
 ```
+
 
 Your answer:
 
@@ -258,15 +261,19 @@ Q3. Explain how you got the model in detail.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+logit_P = predict(Myfit,Test_COVID,type="response")
+logit_Pred <- ifelse(logit_P > 0.5,1,0)
+str(Test_COVID$SURVIVED_bin)
+head(logit_P)
+roc_score <- roc(response = Test_COVID$SURVIVED_bin, predictor = logit_P)
+plot(roc_score, main = "ROC curve -- Logistic Regression")
 ```
 
 Your answer:
 
 ~~~
 Please write your answer in full sentences.
-
+I put some common decies into the function.
 
 ~~~
 
@@ -274,6 +281,8 @@ Q4. Based on your model, what factor seems to be important in deciding if a pati
 
 Your code:
 ```{r,echo=TRUE}
+coef(Myfit)
+summary(Myfit)
 #
 #
 ```
@@ -296,6 +305,9 @@ In this problem, you will develop a model to predict whether a given car gets hi
 
 Your code:
 ```{r,echo=TRUE}
+library(ISLR)
+median_mpg <- median(Auto$mpg)
+Auto$mpg01 <- ifelse(Auto$mpg > median_mpg, 1, 0)
 #
 #
 ```
@@ -311,11 +323,23 @@ Please write your answer in full sentences.
 
 (b) Explore the data graphically in order to investigate the association between `mpg01` and the other features. Which other features seem most likely to be useful in predicting `mpg01`? Scatterplots and boxplots may be useful tools to answer this question. Describe your findings.
 
+```{r}
+ggplot(Auto, aes(x=displacement, y=mpg01)) + geom_point()
+ggplot(Auto, aes(x=weight, y=mpg01)) + geom_point()
+ggplot(Auto, aes(x=acceleration, y=mpg01)) + geom_point()
+```
+
+
 (c) Split the data into a training set and a test set.
 
 Your code:
 ```{r,echo=TRUE}
-#
+set.seed(123) 
+trainIndex <- createDataPartition(Auto$mpg01, p = 0.8, list = FALSE, times = 1)
+
+trainSet <- Auto[trainIndex, ]
+
+testSet <- Auto[-trainIndex, ]
 #
 ```
 
@@ -332,8 +356,10 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+lda_fit <- lda(mpg01 ~ displacement + weight + acceleration, data = trainSet)
+predictions <- predict(lda_fit, testSet)
+test_error <- mean(predictions$class != testSet$mpg01)
+test_error
 ```
 
 Your answer:
@@ -349,8 +375,10 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+qda_fit <- qda(mpg01 ~ displacement + weight + acceleration, data = trainSet)
+predictions <- predict(qda_fit, testSet)
+test_error <- mean(predictions$class != testSet$mpg01)
+test_error
 ```
 
 Your answer:
@@ -366,8 +394,11 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+logit_fit <- glm(mpg01 ~ displacement + weight + acceleration, data = trainSet, family = binomial)
+probabilities <- predict(logit_fit, testSet, type = "response")
+predicted_classes <- ifelse(probabilities > 0.5, 1, 0)
+test_error <- mean(predicted_classes != testSet$mpg01)
+test_error
 ```
 
 Your answer:
@@ -383,8 +414,11 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+library(e1071)
+nb_fit <- naiveBayes(mpg01 ~ displacement + weight + acceleration, data = trainSet)
+predictions <- predict(nb_fit, testSet)
+test_error <- mean(predictions != testSet$mpg01)
+test_error
 ```
 
 Your answer:
@@ -400,8 +434,7 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+
 ```
 
 Your answer:
